@@ -1,0 +1,369 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudyFlow | المنظم الدراسي</title>
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;font-family:Tahoma,Arial,sans-serif;
+  background:#0b1020;color:#f8fafc;padding:22px;
+}
+.container{max-width:1050px;margin:auto}
+header{
+  display:flex;justify-content:space-between;align-items:center;
+  flex-wrap:wrap;gap:12px;margin-bottom:28px
+}
+.logo{font-size:25px;font-weight:bold;color:#a78bfa}
+.logo span{color:#fff}
+.subtitle{color:#94a3b8;font-size:14px;margin-top:7px}
+.card{
+  background:#151d32;border:1px solid #293550;
+  border-radius:17px;padding:20px;margin-bottom:18px
+}
+h2{font-size:19px;margin:0 0 17px}
+h3{margin:0 0 12px;font-size:17px}
+label{display:block;color:#cbd5e1;font-size:14px;margin-bottom:8px}
+input,select{
+  width:100%;padding:12px;border-radius:10px;
+  border:1px solid #35425e;background:#0d1528;
+  color:white;font-size:15px;outline:none
+}
+input:focus,select:focus{border-color:#8b5cf6}
+button{
+  border:0;border-radius:10px;padding:12px 17px;
+  background:#7c3aed;color:white;font-weight:bold;
+  cursor:pointer;font-size:14px
+}
+button:hover{background:#6d28d9}
+button.secondary{background:#293550}
+button.danger{background:#7f2938}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:15px}
+.days{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.day-btn{background:#202b43}
+.day-btn.active{background:#7c3aed}
+.subjects{
+  display:grid;grid-template-columns:repeat(2,1fr);
+  gap:10px;margin:12px 0 18px
+}
+.subject{
+  background:#202b43;border-radius:10px;padding:11px;
+  display:flex;align-items:center;gap:9px;font-size:14px
+}
+.subject input{width:17px;height:17px;accent-color:#8b5cf6}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.stat{background:#202b43;padding:16px;border-radius:12px}
+.stat strong{display:block;font-size:25px;color:#c4b5fd;margin-bottom:5px}
+.stat span{font-size:12px;color:#94a3b8}
+.progress{height:9px;background:#293550;border-radius:20px;overflow:hidden;margin-top:12px}
+.progress div{height:100%;background:#22c55e;width:0%;transition:.3s}
+.plan-day{margin-bottom:17px}
+.plan-item{
+  display:flex;align-items:center;gap:12px;
+  padding:13px;background:#202b43;border-radius:11px;
+  margin-top:9px
+}
+.plan-item input{width:19px;height:19px;accent-color:#22c55e}
+.plan-item.done{opacity:.65}
+.plan-item.done .subject-name{text-decoration:line-through;color:#86efac}
+.plan-info{flex:1}
+.subject-name{font-weight:bold}
+.time{font-size:12px;color:#a5b4fc;margin-top:5px}
+.break{font-size:12px;color:#94a3b8;text-align:center;padding:7px}
+.empty{color:#94a3b8;text-align:center;padding:20px}
+footer{text-align:center;color:#64748b;font-size:12px;padding:20px}
+@media(max-width:650px){
+ body{padding:12px}
+ .grid,.stats{grid-template-columns:1fr}
+ .subjects{grid-template-columns:1fr}
+ header{align-items:flex-start}
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <div>
+    <div class="logo">Study<span>Flow</span> 📚</div>
+    <div class="subtitle">نظّم أسبوعك، وحقق أهدافك الدراسية</div>
+  </div>
+  <button class="secondary" onclick="clearWeek()">مسح جدول الأسبوع</button>
+</header>
+
+<div class="card">
+  <h2>📊 إنجازك الأسبوعي</h2>
+  <div class="stats">
+    <div class="stat"><strong id="total">0</strong><span>إجمالي المواد</span></div>
+    <div class="stat"><strong id="completed">0</strong><span>مواد خلصتها</span></div>
+    <div class="stat"><strong id="percentage">0%</strong><span>نسبة الإنجاز</span></div>
+  </div>
+  <div class="progress"><div id="progressBar"></div></div>
+</div>
+
+<div class="card">
+  <h2>🗓️ إعداد جدول الأسبوع</h2>
+  <label>اختار اليوم اللي عايز تنظمه</label>
+  <div class="days" id="days"></div>
+
+  <div class="grid">
+    <div>
+      <label for="start">هتبدأ المذاكرة الساعة كام؟</label>
+      <input type="time" id="start" value="16:00">
+    </div>
+    <div>
+      <label for="end">هتنتهي الساعة كام؟</label>
+      <input type="time" id="end" value="20:00">
+    </div>
+  </div>
+
+  <label style="margin-top:18px">اختار المواد اللي هتذاكرها</label>
+  <div class="subjects" id="subjects"></div>
+
+  <div class="grid">
+    <div>
+      <label for="breakTime">مدة الراحة بين المواد</label>
+      <select id="breakTime">
+        <option value="5">5 دقائق</option>
+        <option value="10" selected>10 دقائق</option>
+        <option value="15">15 دقيقة</option>
+      </select>
+    </div>
+    <div>
+      <label for="method">توزيع الوقت</label>
+      <select id="method">
+        <option value="equal">بالتساوي بين المواد</option>
+      </select>
+    </div>
+  </div>
+
+  <button style="width:100%;margin-top:20px" onclick="generateDay()">
+    ✨ أنشئ جدول اليوم
+  </button>
+  <p id="message" class="subtitle"></p>
+</div>
+
+<div class="card">
+  <h2>📚 جدولك الأسبوعي</h2>
+  <div id="weeklyPlan"></div>
+</div>
+
+<footer>StudyFlow © 2026 – خطوتك الصغيرة تصنع فرقًا كبيرًا 💜</footer>
+</div>
+
+<script>
+const dayNames=["السبت","الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة"];
+const subjectsList=[
+ "اللغة العربية","اللغة الإنجليزية","الرياضيات",
+ "العلوم","الدراسات الاجتماعية","التربية الدينية",
+ "الكمبيوتر"
+];
+
+let selectedDay=0;
+let plans=JSON.parse(localStorage.getItem("studyflow_plans")||"{}");
+let selectedSubjects=[];
+
+function save(){
+ localStorage.setItem("studyflow_plans",JSON.stringify(plans));
+ updateStats();
+ renderPlan();
+}
+
+function renderDays(){
+ const box=document.getElementById("days");
+ box.innerHTML="";
+ dayNames.forEach((day,i)=>{
+  const b=document.createElement("button");
+  b.textContent=day;
+  b.className="day-btn"+(i===selectedDay?" active":"");
+  b.onclick=()=>selectDay(i);
+  box.appendChild(b);
+ });
+}
+
+function renderSubjects(){
+ const box=document.getElementById("subjects");
+ box.innerHTML="";
+ subjectsList.forEach((subject,i)=>{
+  const label=document.createElement("label");
+  label.className="subject";
+  const input=document.createElement("input");
+  input.type="checkbox";
+  input.checked=selectedSubjects.includes(subject);
+  input.onchange=()=>{
+   if(input.checked)selectedSubjects.push(subject);
+   else selectedSubjects=selectedSubjects.filter(x=>x!==subject);
+  };
+  label.append(input,document.createTextNode(subject));
+  box.appendChild(label);
+ });
+}
+
+function selectDay(i){
+ selectedDay=i;
+ const p=plans[i];
+ selectedSubjects=p?p.items.map(x=>x.name):[];
+ if(p){
+  document.getElementById("start").value=p.start;
+  document.getElementById("end").value=p.end;
+  document.getElementById("breakTime").value=p.breakTime;
+ }else{
+  document.getElementById("start").value="16:00";
+  document.getElementById("end").value="20:00";
+  document.getElementById("breakTime").value="10";
+ }
+ document.getElementById("message").textContent="";
+ renderDays();
+ renderSubjects();
+}
+
+function toMinutes(time){
+ const [h,m]=time.split(":").map(Number);
+ return h*60+m;
+}
+
+function formatTime(minutes){
+ const h=Math.floor(minutes/60)%24;
+ const m=minutes%60;
+ return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
+}
+
+function generateDay(){
+ const start=document.getElementById("start").value;
+ const end=document.getElementById("end").value;
+ const breakTime=Number(document.getElementById("breakTime").value);
+
+ if(!start||!end||selectedSubjects.length===0){
+  document.getElementById("message").textContent="اختار وقت البداية والنهاية ومادة واحدة على الأقل.";
+  return;
+ }
+
+ const startMin=toMinutes(start);
+ const endMin=toMinutes(end);
+ if(endMin<=startMin){
+  document.getElementById("message").textContent="وقت النهاية لازم يكون بعد وقت البداية.";
+  return;
+ }
+
+ const total=endMin-startMin;
+ const breaks=(selectedSubjects.length-1)*breakTime;
+ const studyTime=total-breaks;
+
+ if(studyTime<selectedSubjects.length*15){
+  document.getElementById("message").textContent="الوقت المتاح قليل جدًا للمواد المختارة. زوّد وقت المذاكرة أو قلل المواد.";
+  return;
+ }
+
+ const each=Math.floor(studyTime/selectedSubjects.length);
+ let current=startMin;
+ const oldItems=plans[selectedDay]?.items||[];
+
+ const items=selectedSubjects.map(name=>{
+  const old=oldItems.find(x=>x.name===name);
+  const item={
+   name,
+   start:formatTime(current),
+   end:formatTime(current+each),
+   done:old?old.done:false
+  };
+  current+=each+breakTime;
+  return item;
+ });
+
+ plans[selectedDay]={start,end,breakTime,items};
+ document.getElementById("message").textContent="تم إنشاء جدول "+dayNames[selectedDay]+" بنجاح! 🎉";
+ save();
+}
+
+function renderPlan(){
+ const box=document.getElementById("weeklyPlan");
+ box.innerHTML="";
+ let hasPlan=false;
+
+ dayNames.forEach((day,i)=>{
+  const p=plans[i];
+  if(!p||!p.items.length)return;
+  hasPlan=true;
+
+  const section=document.createElement("div");
+  section.className="plan-day";
+
+  const heading=document.createElement("h3");
+  heading.textContent=day;
+  section.appendChild(heading);
+
+  p.items.forEach((item,j)=>{
+   const row=document.createElement("div");
+   row.className="plan-item"+(item.done?" done":"");
+
+   const check=document.createElement("input");
+   check.type="checkbox";
+   check.checked=item.done;
+   check.setAttribute("aria-label","إنجاز "+item.name);
+   check.onchange=()=>{
+    plans[i].items[j].done=check.checked;
+    save();
+   };
+
+   const info=document.createElement("div");
+   info.className="plan-info";
+
+   const name=document.createElement("div");
+   name.className="subject-name";
+   name.textContent=item.name;
+
+   const time=document.createElement("div");
+   time.className="time";
+   time.textContent=item.start+" – "+item.end;
+
+   info.append(name,time);
+   row.append(check,info);
+   section.appendChild(row);
+
+   if(j<p.items.length-1){
+    const rest=document.createElement("div");
+    rest.className="break";
+    rest.textContent="☕ راحة "+p.breakTime+" دقائق";
+    section.appendChild(rest);
+   }
+  });
+
+  box.appendChild(section);
+ });
+
+ if(!hasPlan){
+  box.innerHTML='<div class="empty">لسه مفيش جدول. اختار موادك وأنشئ جدولك الأول! 📖</div>';
+ }
+ updateStats();
+}
+
+function updateStats(){
+ let total=0,completed=0;
+ Object.values(plans).forEach(p=>{
+  p.items.forEach(item=>{
+   total++;
+   if(item.done)completed++;
+  });
+ });
+ document.getElementById("total").textContent=total;
+ document.getElementById("completed").textContent=completed;
+ const percentage=total?Math.round(completed/total*100):0;
+ document.getElementById("percentage").textContent=percentage+"%";
+ document.getElementById("progressBar").style.width=percentage+"%";
+}
+
+function clearWeek(){
+ if(!confirm("متأكد إنك عايز تمسح جدول الأسبوع كله؟"))return;
+ plans={};
+ save();
+ selectDay(0);
+}
+
+renderDays();
+renderSubjects();
+renderPlan();
+</script>
+</body>
+</html>
